@@ -1,0 +1,164 @@
+--[[ Auto Carry Plugin: Ryze by SmartNerdy ]]--
+
+-- Constants
+local HK1 = 221 -- ']' -- string.byte("K") -- Hold to Turn on/off Burst Combo while carrying
+local HK2 = string.byte("A") -- Hold to Turn on/off Farm with Q
+local HK3 = string.byte("W") -- Auto Cage the closest enemy
+local HK4 = 219 -- '[' string.byte("A") -- Hold to Turn on/off Farm with E
+local HK5 = string.byte("X") -- Turn on/off Ult in combos
+local qRange = 650
+local wRange = 625
+local eRange = 675
+enemyMinions = minionManager(MINION_ENEMY, 650, player, MINION_SORT_HEALTH_ASC)
+closestchamp = nil
+
+-- Menu
+AutoCarry.PluginMenu:addParam("sep", "-- Combo Options --", SCRIPT_PARAM_INFO, "")
+AutoCarry.PluginMenu:addParam("bCombo", "Burst while Carrying", SCRIPT_PARAM_ONKEYDOWN, false, HK1) --[[SCRIPT_PARAM_ONKEYTOGGLE]]
+AutoCarry.PluginMenu:addParam("qKS", "KS With Q", SCRIPT_PARAM_ONOFF, true)
+AutoCarry.PluginMenu:addParam("wCage", "Cage Closest Enemy", SCRIPT_PARAM_ONKEYDOWN, false, HK3)
+AutoCarry.PluginMenu:addParam("useUlt", "Use Ult in Combos", SCRIPT_PARAM_ONKEYTOGGLE, false, HK5)
+AutoCarry.PluginMenu:addParam("sep1", "-- Farming Options --", SCRIPT_PARAM_INFO, "")
+AutoCarry.PluginMenu:addParam("fMana", "Minimum % of Mana to farm",  SCRIPT_PARAM_SLICE, 30, 0, 100, 2)
+AutoCarry.PluginMenu:addParam("farmQ", "Use Q to Farm", SCRIPT_PARAM_ONKEYDOWN, false, HK2)
+AutoCarry.PluginMenu:addParam("farmW", "Use W to Farm", SCRIPT_PARAM_ONOFF, false)
+AutoCarry.PluginMenu:addParam("farmE", "Use E to Farm", SCRIPT_PARAM_ONKEYDOWN, false, HK4)
+AutoCarry.PluginMenu:addParam("sep2", "-- Draw Range --", SCRIPT_PARAM_INFO, "")
+AutoCarry.PluginMenu:addParam("drawQ", "Draw Q Range", SCRIPT_PARAM_ONOFF, false)
+AutoCarry.PluginMenu:addParam("drawW", "Draw W Range", SCRIPT_PARAM_ONOFF, false)
+AutoCarry.PluginMenu:addParam("drawE", "Draw E Range", SCRIPT_PARAM_ONOFF, false)
+
+AutoCarry.PluginMenu:permaShow("farmQ")
+AutoCarry.PluginMenu:permaShow("farmE")
+AutoCarry.PluginMenu:permaShow("useUlt")
+
+-- Skill Executions
+function PluginOnTick()
+	if AutoCarry.PluginMenu.qKS then
+		qKS()
+	end
+	if AutoCarry.PluginMenu.wCage then
+		wCage()
+	end		
+	if AutoCarry.PluginMenu.bCombo and AutoCarry.MainMenu.AutoCarry  then
+		bCombo()
+	end
+	if AutoCarry.PluginMenu.farmQ and not AutoCarry.MainMenu.AutoCarry
+		and AutoCarry.PluginMenu.fMana <=((myHero.mana/myHero.maxMana)*100) then
+		qFarm()
+	end
+	if AutoCarry.PluginMenu.farmW and not AutoCarry.MainMenu.AutoCarry
+		and AutoCarry.PluginMenu.fMana <=((myHero.mana/myHero.maxMana)*100) then
+		wFarm()
+	end
+	if AutoCarry.PluginMenu.farmE and not AutoCarry.MainMenu.AutoCarry
+		and AutoCarry.PluginMenu.fMana <=((myHero.mana/myHero.maxMana)*100) then
+		eFarm()
+	end
+	
+end
+
+-- Q KS
+function qKS() 
+        for _, enemy in pairs(AutoCarry.EnemyTable) do 
+                if ValidTarget(enemy, qRange)  and not enemy.dead then 
+                        if enemy.health < getDmg("Q", enemy, myHero) then 
+                                CastSpell(_Q, enemy) 
+                        end 
+                end 
+        end 
+end
+
+-- Burst Combo
+function bCombo()
+	for _, enemy in pairs(AutoCarry.EnemyTable) do
+		if AutoCarry.PluginMenu.bCombo and not enemy.dead then
+			if ValidTarget(enemy, qRange) and AutoCarry.PluginMenu.useUlt and myHero:CanUseSpell(_R) == READY then
+				CastSpell(_R)
+			elseif ValidTarget(enemy, qRange) and myHero:CanUseSpell(_Q) == READY then
+				CastSpell(_Q, enemy)
+			elseif ValidTarget(enemy, wRange) and myHero:CanUseSpell(_W) == READY then
+				CastSpell(_W, enemy)
+			elseif ValidTarget(enemy, eRange) and myHero:CanUseSpell(_E) == READY then
+				CastSpell(_E, enemy)
+			end
+		end
+	end
+end
+
+-- Farming Functions
+	 -- Q Farm 
+function qFarm()
+		AutoCarry.enemyMinions:update()
+		for _, minion in pairs(AutoCarry.enemyMinions.objects) do
+                  if ValidTarget(minion) and myHero:CanUseSpell(_Q) == READY and AutoCarry.PluginMenu.farmQ then
+                        if minion.health < getDmg("Q", minion, myHero) then
+                                CastSpell(_Q, minion)
+								
+                        end 
+                end
+        end
+end
+
+	-- W Farm
+function wFarm()
+		AutoCarry.enemyMinions:update()
+		for _, minion in pairs(AutoCarry.enemyMinions.objects) do
+                  if ValidTarget(minion) and myHero:CanUseSpell(_W) == READY and AutoCarry.PluginMenu.farmW then
+                        if minion.health < getDmg("W", minion, myHero) then
+                                CastSpell(_W, minion)
+								
+                        end 
+                end
+        end
+end
+
+	-- E Farm
+function eFarm()
+		AutoCarry.enemyMinions:update()
+		for _, minion in pairs(AutoCarry.enemyMinions.objects) do
+                  if ValidTarget(minion) and myHero:CanUseSpell(_E) == READY and AutoCarry.PluginMenu.farmE then
+                        if minion.health < getDmg("E", minion, myHero) then
+                                CastSpell(_E, minion)
+								
+                        end 
+                end
+        end
+end
+
+-- Gets Closest Enemy (Thanks to HeX)
+function closestEnemy()
+        for _, champ in pairs(AutoCarry.EnemyTable) do
+                if closestchamp and closestchamp.valid and champ and champ.valid then
+                        if GetDistance(champ) < GetDistance(closestchamp) then
+                                closestchamp = champ
+                        end
+                else
+                        closestchamp = champ
+                end
+        end
+						return closestchamp
+end
+
+-- Cage Closest Enemy
+function wCage()
+        if myHero:CanUseSpell(_W) == READY and closestEnemy() then
+                cEnemy = closestEnemy()
+                if ValidTarget(cEnemy) then
+                        if myHero:GetDistance(cEnemy) < 625 and ValidTarget(cEnemy) then
+                                CastSpell(_W, cEnemy)
+                        end
+                end
+        end
+end
+		
+-- Draw Range 
+function PluginOnDraw()
+	if myHero:CanUseSpell(_Q) == READY and AutoCarry.PluginMenu.drawQ then
+			DrawCircle(myHero.x, myHero.y, myHero.z, 650, 0x0000ff00)
+	elseif myHero:CanUseSpell(_W) == READY and AutoCarry.PluginMenu.drawW then
+			DrawCircle(myHero.x, myHero.y, myHero.z, 625, 0x0000ff00)
+	elseif myHero:CanUseSpell(_E) == READY and AutoCarry.PluginMenu.drawE then
+			DrawCircle(myHero.x, myHero.y, myHero.z, 675, 0x0000ff00)
+	end
+end

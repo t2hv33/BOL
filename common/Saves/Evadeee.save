@@ -1,0 +1,108 @@
+return {
+	["dashData"] = {
+	},
+	["spellData"] = {
+		["LeeSin"] = {
+			["Q - Sonic Wave"] = {
+				["dangerLevel"] = 3,
+				["isDangerous"] = true,
+			},
+		},
+		["Morgana"] = {
+			["Q - Dark Binding"] = {
+				["dangerLevel"] = 3,
+				["isDangerous"] = true,
+			},
+		},
+		["Leona"] = {
+			["E - Zenith Blade"] = {
+				["dangerLevel"] = 3,
+				["isDangerous"] = true,
+			},
+			["R - Solar Flare"] = {
+				["dangerLevel"] = 4,
+				["isDangerous"] = true,
+			},
+		},
+		["Tristana"] = {
+			["W - Rocket Jump"] = {
+				["dangerLevel"] = 1,
+			},
+		},
+		["Ezreal"] = {
+			["Q - Mystic Shot"] = {
+				["dangerLevel"] = 1,
+			},
+			["W - Essence Flux"] = {
+				["dangerLevel"] = 1,
+			},
+			["R - Trueshot Barrage"] = {
+				["dangerLevel"] = 4,
+				["isDangerous"] = true,
+			},
+		},
+		["Lux"] = {
+			["Q - Light Binding"] = {
+				["isDangerous"] = true,
+				["dangerLevel"] = 3,
+			},
+			["E - Lucent Singularity"] = {
+				["dangerLevel"] = 1,
+			},
+			["R - Final Spark"] = {
+				["isDangerous"] = true,
+				["dangerLevel"] = 5,
+			},
+		},
+		["Ashe"] = {
+			["R - Enchanted Arrow"] = {
+				["isDangerous"] = true,
+				["dangerLevel"] = 5,
+			},
+			["W - Volley"] = {
+				["dangerLevel"] = 1,
+			},
+		},
+		["Nidalee"] = {
+			["Q - Javelin Toss"] = {
+				["dangerLevel"] = 3,
+				["isDangerous"] = true,
+			},
+		},
+		["Ziggs"] = {
+			["W - Satchel Charge"] = {
+				["dangerLevel"] = 2,
+			},
+			["Q - Bouncing Bomb"] = {
+				["dangerLevel"] = 1,
+			},
+			["R - Mega Inferno Bomb"] = {
+				["dangerLevel"] = 5,
+				["isDangerous"] = true,
+			},
+			["E - Hexplosive Minefield"] = {
+				["dangerLevel"] = 1,
+			},
+		},
+		["Karthus"] = {
+			["Q - Lay Waste"] = {
+				["dangerLevel"] = 2,
+			},
+		},
+		["JarvanIV"] = {
+			["Q - Dragon Strike"] = {
+				["dangerLevel"] = 3,
+				["isDangerous"] = true,
+			},
+		},
+		["Brand"] = {
+			["W - Pillar of Flame"] = {
+				["dangerLevel"] = 1,
+			},
+			["Q - Sear"] = {
+				["dangerLevel"] = 3,
+				["isDangerous"] = true,
+			},
+		},
+	},
+}

@@ -1,0 +1,245 @@
+return {
+	["Riven"] = {
+	},
+	["Annie"] = {
+	},
+	["Yasuo"] = {
+	},
+	["Vayne"] = {
+		[1] = {
+			["value"] = false,
+			["name"] = "QTumble",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "QTumble",
+			["mode"] = "MixedMode",
+		},
+		[4] = {
+			["value"] = false,
+			["name"] = "RFinalHour",
+			["mode"] = "AutoCarry",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "QTumble",
+			["mode"] = "LaneClear",
+		},
+		[5] = {
+			["value"] = false,
+			["name"] = "RFinalHour",
+			["mode"] = "MixedMode",
+		},
+		[6] = {
+			["value"] = false,
+			["name"] = "RFinalHour",
+			["mode"] = "LaneClear",
+		},
+	},
+	["Zilean"] = {
+	},
+	["TargetSelectorMode"] = 7,
+	["Rengar"] = {
+		[1] = {
+			["value"] = false,
+			["name"] = "QSavagery",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "QSavagery",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "QSavagery",
+			["mode"] = "LaneClear",
+		},
+		[6] = {
+			["value"] = false,
+			["name"] = "QSavagery",
+			["mode"] = "LaneClear",
+		},
+		[9] = {
+			["value"] = false,
+			["name"] = "QEmpoweredSavagery",
+			["mode"] = "LaneClear",
+		},
+		[8] = {
+			["value"] = false,
+			["name"] = "QEmpoweredSavagery",
+			["mode"] = "MixedMode",
+		},
+		[5] = {
+			["value"] = false,
+			["name"] = "QSavagery",
+			["mode"] = "MixedMode",
+		},
+		[7] = {
+			["value"] = false,
+			["name"] = "QEmpoweredSavagery",
+			["mode"] = "AutoCarry",
+		},
+		[4] = {
+			["value"] = false,
+			["name"] = "QSavagery",
+			["mode"] = "AutoCarry",
+		},
+	},
+	["EnemyHitBoxes"] = {
+		["Data"] = {
+			["Vayne"] = 163.15168762207,
+		},
+		["TimeSaved"] = 3.4843811988831,
+	},
+	["StreamingMode"] = false,
+	["Karthus"] = {
+	},
+	["Xerath"] = {
+	},
+	["Ryze"] = {
+	},
+	["Blitzcrank"] = {
+		[1] = {
+			["value"] = false,
+			["name"] = "EPowerFist",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "EPowerFist",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "EPowerFist",
+			["mode"] = "LaneClear",
+		},
+	},
+	["Alistar"] = {
+	},
+	["MissFortune"] = {
+		[1] = {
+			["value"] = true,
+			["name"] = "QDoubleUp",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = true,
+			["name"] = "QDoubleUp",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "QDoubleUp",
+			["mode"] = "LaneClear",
+		},
+		[6] = {
+			["value"] = false,
+			["name"] = "WImpureShots",
+			["mode"] = "LaneClear",
+		},
+		[4] = {
+			["value"] = true,
+			["name"] = "WImpureShots",
+			["mode"] = "AutoCarry",
+		},
+		[8] = {
+			["value"] = false,
+			["name"] = "EMakeItRain",
+			["mode"] = "MixedMode",
+		},
+		[5] = {
+			["value"] = false,
+			["name"] = "WImpureShots",
+			["mode"] = "MixedMode",
+		},
+		[7] = {
+			["value"] = false,
+			["name"] = "EMakeItRain",
+			["mode"] = "AutoCarry",
+		},
+		[9] = {
+			["value"] = false,
+			["name"] = "EMakeItRain",
+			["mode"] = "LaneClear",
+		},
+	},
+	["Syndra"] = {
+		[1] = {
+			["value"] = false,
+			["name"] = "QDarkSphere",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "QDarkSphere",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "QDarkSphere",
+			["mode"] = "LaneClear",
+		},
+	},
+	["Kayle"] = {
+	},
+	["Cassiopeia"] = {
+	},
+	["Janna"] = {
+	},
+	["LeeSin"] = {
+		[1] = {
+			["value"] = false,
+			["name"] = "QSonicWave",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "QSonicWave",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "QSonicWave",
+			["mode"] = "LaneClear",
+		},
+	},
+	["TwistedFate"] = {
+		[1] = {
+			["value"] = false,
+			["name"] = "QWildCards",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "QWildCards",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "QWildCards",
+			["mode"] = "LaneClear",
+		},
+	},
+	["Viktor"] = {
+	},
+	["Ashe"] = {
+		[1] = {
+			["value"] = true,
+			["name"] = "WVolley",
+			["mode"] = "AutoCarry",
+		},
+		[2] = {
+			["value"] = false,
+			["name"] = "WVolley",
+			["mode"] = "MixedMode",
+		},
+		[3] = {
+			["value"] = false,
+			["name"] = "WVolley",
+			["mode"] = "LaneClear",
+		},
+	},
+}

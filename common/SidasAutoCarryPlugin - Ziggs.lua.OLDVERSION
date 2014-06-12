@@ -1,0 +1,456 @@
+--[[
+ 
+        Auto Carry Plugin - Ziggs Edition
+		Author: Kain
+		Version: 1.05
+		Copyright 2013
+
+		Dependency: Sida's Auto Carry: Revamped
+ 
+		How to install:
+			Make sure you already have AutoCarry installed.
+			Name the script EXACTLY "SidasAutoCarryPlugin - Ziggs.lua" without the quotes.
+			Place the plugin in BoL/Scripts/Common folder.
+--]]
+
+if myHero.charName ~= "Ziggs" then return end
+
+local Target
+
+-- Prediction
+local QRange = 850
+local QMaxRange = 1400
+local WRange = 1000
+local ERange = 900
+local RRange = 5300
+
+local QSpeed = 1.2
+local WSpeed = 1.5
+local ESpeed = 1.45
+local RSpeed = 1.5
+
+local QWidth = 150
+local WWidth = 225
+local EWidth = 250
+local RWidth = 550
+
+local SkillQ = {spellKey = _Q, range = QMaxRange, speed = QSpeed, delay = 0, width = QWidth, configName = "bouncingbomb", displayName = "Q (Bouncing Bomb)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = true }
+local SkillW = {spellKey = _W, range = WRange, speed = WSpeed, delay = 0, width = WWidth, configName = "satchelcharge", displayName = "W (Satchel Charge)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = false }
+local SkillE = {spellKey = _E, range = ERange, speed = ESpeed, delay = 0, width = EWidth, configName = "hexplosiveminefield", displayName = "E (Hexplosive Minefield)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = false }
+local SkillR = {spellKey = _R, range = RRange, speed = RSpeed, delay = 0, width = RWidth, configName = "megainfernobomb", displayName = "R (Mega Inferno Bomb)", enabled = true, skillShot = true, minions = false, reset = false, reqTarget = true }
+
+AutoCarry.PluginMenu:addParam("ziggscombo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 219)
+AutoCarry.PluginMenu:addParam("fullcombo", "Full Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+AutoCarry.PluginMenu:addParam("harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("S")) 
+AutoCarry.PluginMenu:addParam("satcheljump", "Satchel Jump - V", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+AutoCarry.PluginMenu:addParam("ultimate", "Use Ultimate with Combo", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
+AutoCarry.PluginMenu:addParam("killsteal", "Ultimate Mega Killsteal", SCRIPT_PARAM_ONOFF, true)
+AutoCarry.PluginMenu:addParam("drawkillableenemy", "Draw Killable Enemy", SCRIPT_PARAM_ONOFF, true)
+AutoCarry.PluginMenu:addParam("drawtext", "Draw Text", SCRIPT_PARAM_ONOFF, true)
+AutoCarry.PluginMenu:addParam("drawprediction", "Draw Prediction", SCRIPT_PARAM_ONOFF, true)
+AutoCarry.PluginMenu:addParam("draw", "Draw range circles", SCRIPT_PARAM_ONOFF, true)
+AutoCarry.PluginMenu:addParam("drawult", "Draw Ult range circle", SCRIPT_PARAM_ONOFF, true)
+
+AutoCarry.PluginMenu:permaShow("ultimate")
+AutoCarry.PluginMenu:permaShow("satcheljump")
+
+local KeyQ = string.byte("Q")
+local KeyW = string.byte("W")
+local KeyE = string.byte("E")
+local KeyR = string.byte("R")
+
+local tick = nil
+local doUlt = false
+
+-- Draw
+local waittxt = {}
+local calculationenemy = 1
+local floattext = {"Skills not available", "Able to fight", "Killable", "Murder him!"}
+local killable = {}
+
+local ignite = nil
+local DFGSlot, HXGSlot, BWCSlot, SheenSlot, TrinitySlot, LichBaneSlot = nil, nil, nil, nil, nil, nil
+local QReady, WReady, EReady, RReady, DFGReady, HXGReady, BWCReady, IReady = false, false, false, false, false, false, false, false
+
+local satchelChargeExists = false
+local pendingSatchelChargeActivation = nil
+local debugMode = false
+
+-- Main
+function PluginOnLoad()
+	AutoCarry.SkillsCrosshair.range = QMaxRange
+
+	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then ignite = SUMMONER_1
+	elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then ignite = SUMMONER_2 end
+	for i=1, heroManager.iCount do waittxt[i] = i*3 end
+end
+
+function PluginOnTick()
+	Target = AutoCarry.GetAttackTarget(true)
+
+	SpellCheck()
+
+	if tick == nil or GetTickCount()-tick >= 200 then
+		tick = GetTickCount()
+		CalculateDamage()
+	end
+
+	if AutoCarry.PluginMenu.satcheljump then
+		SatchelJump()
+	end
+
+	if (AutoCarry.MainMenu.AutoCarry or AutoCarry.MainMenu.MixedMode) then
+		Combo()
+	end
+	
+	if AutoCarry.PluginMenu.fullcombo then
+		FullCombo()
+	end
+
+	if AutoCarry.PluginMenu.harass then
+		Harass()
+	end
+
+	if AutoCarry.PluginMenu.killsteal then
+		KillSteal()
+	end
+end
+
+function PluginOnCreateObj(obj)
+	if obj.name == "ZiggsW_mis_ground.troy" then
+		satchelChargeExists = true
+		CastWActivate()
+	end
+end
+
+function PluginOnDeleteObj(obj)
+	if obj.name == "ZiggsW_mis_ground.troy" then
+		satchelChargeExists = false
+		pendingSatchelChargeActivation = nil
+	end
+end
+
+function OnAttacked()
+	-- AA > Q > AA
+	CastQ()
+end
+
+function SpellCheck()
+	DFGSlot, HXGSlot, BWCSlot, SheenSlot, TrinitySlot, LichBaneSlot = GetInventorySlotItem(3128),
+	GetInventorySlotItem(3146), GetInventorySlotItem(3144), GetInventorySlotItem(3057),
+	GetInventorySlotItem(3078), GetInventorySlotItem(3100)
+
+	QReady = (myHero:CanUseSpell(SkillQ.spellKey) == READY)
+	WReady = (myHero:CanUseSpell(SkillW.spellKey) == READY)
+	EReady = (myHero:CanUseSpell(SkillE.spellKey) == READY)
+	RReady = (myHero:CanUseSpell(SkillR.spellKey) == READY)
+
+	DFGReady = (DFGSlot ~= nil and myHero:CanUseSpell(DFGSlot) == READY)
+	HXGReady = (HXGSlot ~= nil and myHero:CanUseSpell(HXGSlot) == READY)
+	BWCReady = (BWCSlot ~= nil and myHero:CanUseSpell(BWCSlot) == READY)
+	IReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
+end
+
+-- Handle SBTW Skill Shots
+
+function Combo()
+	CastSlots()
+	CastE()
+	CastQ()
+	if AutoCarry.PluginMenu.ultimate and doUlt then
+		CastR()
+	end
+end
+
+function FullCombo()
+	CastSlots()
+	CastE()
+	CastQ()
+	CastW()
+	CastWActivate()
+	if AutoCarry.PluginMenu.ultimate and doUlt then
+		CastR()
+	end
+end
+
+function CastSlots()
+	if Target ~= nil then
+		if GetDistance(Target) <= QMaxRange then
+			if DFGReady then CastSpell(DFGSlot, Target) end
+			if HXGReady then CastSpell(HXGSlot, Target) end
+			if BWCReady then CastSpell(BWCSlot, Target) end
+		end
+	end
+end
+
+function Harass()
+	CastQ()
+end
+
+function CastQ()
+	if Target ~= nil then
+		if QReady and ValidTarget(Target, QRange) then
+			AutoCarry.CastSkillshot(SkillQ, Target)
+		elseif QReady and ValidTarget(Target, QMaxRange) then
+			-- Full Bouncing Bomb three bounce range
+			local PredictedPos = AutoCarry.GetPrediction(SkillQ, Target)
+
+			if PredictedPos and AutoCarry.IsValidHitChance(SkillQ, Target) then
+				local MyPos = Vector(myHero.x, myHero.y, myHero.z)
+				local EnemyPos = Vector(PredictedPos.x, PredictedPos.y, PredictedPos.z)
+				local CastPos = MyPos - (MyPos - EnemyPos):normalized() * QRange
+				if CastPos then CastSpell(SkillQ.spellKey, CastPos.x, CastPos.z) end
+			end
+		end
+	end
+end
+
+function CastW(noTarget)
+	if noTarget and WReady then
+		AutoCarry.CastSkillshot(SkillW, myHero)
+	elseif Target ~= nil and ValidTarget(Target, WRange) then
+		if WReady and GetDistance(Target) <= WRange then
+			AutoCarry.CastSkillshot(SkillW, Target)
+		end
+	end
+end
+
+function CastWActivate()
+	if satchelChargeExists and pendingSatchelChargeActivation ~= nil then
+		if pendingSatchelChargeActivation == "satcheljump" then
+			CastSpell(SkillW.spellKey)
+			CastE()
+			pendingSatchelChargeActivation = nil
+		end
+	end
+end
+
+function CastE()
+	if Target ~= nil and ValidTarget(Target, ERange) then
+		if EReady and GetDistance(Target) <= ERange then
+			AutoCarry.CastSkillshot(SkillE, Target)
+		end
+	end
+end
+
+function CastR()
+	if Target ~= nil and ValidTarget(enemy, RRange) then
+		if RReady and GetDistance(Target) <= RRange then
+			AutoCarry.CastSkillshot(SkillR, Target)
+		end
+	end
+end
+
+function KillSteal()
+	for _, enemy in pairs(AutoCarry.EnemyTable) do
+		if ValidTarget(enemy, RRange) then
+			if enemy.health < getDmg("R", enemy, myHero) and IsValidHitChanceCustom(SkillR, enemy) then
+				AutoCarry.CastSkillshot(SkillR, enemy)
+			end
+		end
+	end
+end
+
+function SatchelJump()
+	-- E is cast before and after jump to insure that a target near either location can be hit.
+	pendingSatchelChargeActivation = "satcheljump"
+	CastW(true)
+	CastE()
+end
+
+-- Sliding scale hitchance based on target distance.
+function getScalingHitChanceFromDistance(SkillRange, Target)
+	local minHitChance = 60
+	local maxHitChance = 95
+
+	hitChance = minHitChance + ((1 - (SkillRange - GetDistance(Target)) / (SkillRange - 0))) * (maxHitChance - minHitChance)
+	if debugMode then PrintChat("HitChance Info: skillrange="..SkillRange..", targetdistance="..GetDistance(Target)..", hitchance:"..hitChance) end
+	return hitChance
+end
+
+function IsValidHitChanceCustom(skill, target)
+	if VIP_USER then
+		pred = TargetPredictionVIP(skill.range, skill.speed*1000, skill.delay/1000, skill.width)
+		return pred:GetHitChance(target) > getScalingHitChanceFromDistance(skill.range, target)/100 and true or false
+	elseif not VIP_USER then
+		local nonVIPMaxHitChance = 70
+		return getScalingHitChanceFromDistance(skill.range, target) < nonVIPMaxHitChance and true or false
+	end
+end
+
+--[[
+function satchelChargeExistsDelete()
+	for i=1, objManager.maxObjects do
+		local obj = objManager:getObject(i)
+
+		if obj ~= nil and obj.name:find("Satchel Charge") then
+			return true
+		end
+	end	
+	return false
+end
+--]]
+
+-- Handle Manual Skill Shots
+
+function PluginOnWndMsg(msg,key)
+	Target = AutoCarry.GetAttackTarget()
+	if Target ~= nil then
+		if msg == KEY_DOWN and key == KeyQ then CastQ() end
+		if msg == KEY_DOWN and key == KeyW then CastW() end
+		if msg == KEY_DOWN and key == KeyE then CastE() end
+		if msg == KEY_DOWN and key == KeyR then CastR() end
+	end
+end
+
+-- Drawing
+
+function PluginOnDraw()
+	if AutoCarry.PluginMenu.draw then
+		DrawCircle(myHero.x, myHero.y, myHero.z, AutoCarry.SkillsCrosshair.range, 0x19A712)
+
+		if myHero:CanUseSpell(SkillQ.spellKey) then
+			DrawCircle(myHero.x, myHero.y, myHero.z, QRange, 0xFF0000)
+		end
+		
+		if myHero:CanUseSpell(SkillW.spellKey) then
+			DrawCircle(myHero.x, myHero.y, myHero.z, WRange, 0xFF0000)
+		end
+		
+		if myHero:CanUseSpell(SkillE.spellKey) then
+			DrawCircle(myHero.x, myHero.y, myHero.z, ERange, 0xFF0000)
+		end
+
+		if AutoCarry.PluginMenu.drawult then
+			if myHero:CanUseSpell(SkillR.spellKey) then
+				DrawCircle(myHero.x, myHero.y, myHero.z, RRange, 0xFF0000)
+			end
+		end
+
+		Target = AutoCarry.GetAttackTarget()
+		if Target ~= nil then
+			for j=0, 10 do
+				DrawCircle(Target.x, Target.y, Target.z, 40 + j*1.5, 0x00FF00)
+			end
+		end
+	end
+	
+	DrawKillable()
+end
+
+function CalculateDamage()
+        if ValidTarget(Target) then
+                local dfgdamage, hxgdamage, bwcdamage, ignitedamage, Sheendamage, Trinitydamage, LichBanedamage  = 0, 0, 0, 0, 0, 0, 0
+                local pdamage = getDmg("P",Target,myHero)
+                local qdamage = getDmg("Q",Target,myHero)
+                local wdamage = getDmg("W",Target,myHero)
+                local edamage = getDmg("E",Target,myHero)
+                local rdamage = getDmg("R",Target,myHero)
+                local hitdamage = getDmg("AD",Target,myHero)
+                local dfgdamage = (DFGSlot and getDmg("DFG",Target,myHero) or 0)
+                local hxgdamage = (HXGSlot and getDmg("HXG",Target,myHero) or 0)
+                local bwcdamage = (BWCSlot and getDmg("BWC",Target,myHero) or 0)
+                local ignitedamage = (ignite and getDmg("IGNITE",Target,myHero) or 0)
+                local Sheendamage = (SheenSlot and getDmg("SHEEN",Target,myHero) or 0)
+                local Trinitydamage = (TrinitySlot and getDmg("TRINITY",Target,myHero) or 0)
+                local LichBanedamage = (LichBaneSlot and getDmg("LICHBANE",Target,myHero) or 0)
+                local combo1 = hitdamage + qdamage + wdamage + edamage + rdamage + Sheendamage + Trinitydamage + LichBanedamage --0 cd
+                local combo2 = hitdamage + Sheendamage + Trinitydamage + LichBanedamage
+                local combo3 = hitdamage + Sheendamage + Trinitydamage + LichBanedamage
+                local combo4 = 0
+               
+                if QREADY then
+                        combo2 = combo2 + qdamage
+                        combo3 = combo3 + qdamage
+                        --combo4 = combo4 + qdamage
+                end
+                if WREADY then
+                        combo2 = combo2 + wdamage
+                        combo3 = combo3 + wdamage
+                end
+                if EREADY then
+                        combo2 = combo2 + edamage
+                        combo3 = combo3 + edamage
+                        --combo4 = combo4 + edamage
+                end
+                if RREADY then
+                        combo2 = combo2 + rdamage
+                        combo3 = combo3 + rdamage
+                        combo4 = combo4 + rdamage
+                end
+                if DFGREADY then        
+                        combo1 = combo1 + dfgdamage            
+                        combo2 = combo2 + dfgdamage
+                        combo3 = combo3 + dfgdamage
+                        --combo4 = combo4 + dfgdamage
+                end
+                if HXGREADY then              
+                        combo1 = combo1 + hxgdamage    
+                        combo2 = combo2 + hxgdamage
+                        combo3 = combo3 + hxgdamage
+                        --combo4 = combo4 + hxgdamage
+                end
+                if BWCREADY then
+                        combo1 = combo1 + bwcdamage
+                        combo2 = combo2 + bwcdamage
+                        combo3 = combo3 + bwcdamage
+                        combo4 = combo4 + bwcdamage
+                end
+                if IREADY then
+                        combo1 = combo1 + ignitedamage
+                        combo2 = combo2 + ignitedamage
+                        combo3 = combo3 + ignitedamage
+                end
+                if combo4 >= Target.health then killable[calculationenemy] = 4 doUlt = true
+                elseif combo3 >= Target.health then killable[calculationenemy] = 3 doUlt = false
+                elseif combo2 >= Target.health then killable[calculationenemy] = 2 doUlt = false
+                elseif combo1 >= Target.health then killable[calculationenemy] = 1  doCombo = true doUlt = false
+                else killable[calculationenemy] = 0 doCombo = false doUlt = false end
+        end
+        if calculationenemy == 1 then calculationenemy = heroManager.iCount
+        else calculationenemy = calculationenemy-1 end
+end
+ 
+function DrawKillable()
+	if 1 == 2 and Target ~= nil and AutoCarry.PluginMenu.drawprediction then
+		if VIP_USER then
+			pred = TargetPredictionVIP(SkillQ.range, SkillQ.speed*1000, SkillQ.delay/1000, SkillQ.width)
+		elseif not VIP_USER then
+			pred = TargetPrediction(SkillQ.range, SkillQ.speed, SkillQ.delay, SkillQ.width)
+		end
+		predPos = pred:GetPrediction(Target)
+		DrawCircle(predPos.x, Target.y, predPos.z, 200, 0x0000FF)
+	end
+	for i=1, heroManager.iCount do
+		local enemydraw = heroManager:GetHero(i)
+		if ValidTarget(enemydraw) then
+			if AutoCarry.PluginMenu.drawkillableenemy then
+				if killable[i] == 1 then
+					for j=0, 20 do
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 80 + j*1.5, 0x0000FF)
+					end
+				elseif killable[i] == 2 then
+					for j=0, 10 do
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 80 + j*1.5, 0xFF0000)
+					end
+				elseif killable[i] == 3 then
+					for j=0, 10 do
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 80 + j*1.5, 0xFF0000)
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 110 + j*1.5, 0xFF0000)
+					end
+				elseif killable[i] == 4 then
+					for j=0, 10 do
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 80 + j*1.5, 0xFF0000)
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 110 + j*1.5, 0xFF0000)
+						DrawCircle(enemydraw.x, enemydraw.y, enemydraw.z, 140 + j*1.5, 0xFF0000)
+					end
+				end
+			end
+			if AutoCarry.PluginMenu.drawtext and waittxt[i] == 1 and killable[i] ~= 0 then
+					PrintFloatText(enemydraw,0,floattext[killable[i]])
+			end
+		end
+		if waittxt[i] == 1 then waittxt[i] = 30
+		else waittxt[i] = waittxt[i]-1 end
+	end
+end
