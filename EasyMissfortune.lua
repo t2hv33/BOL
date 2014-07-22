@@ -1,9 +1,9 @@
 --[[
 
-	EasyCait - Scripted by How I met Katarina.
-	Version: 0.0x
+	EasyCait - Scripted by BomD.
+	Version: 0.01
 	
-	Credits : Bilbao for maths and skill table, Honda7 for SOW and VPred
+	Credits :  How I met Katarina for EasyCait script, Bilbao for maths and skill table, Honda7 for SOW and VPred
 	Hope I didn't forget somebody.
 ]]--
 
@@ -47,17 +47,6 @@ if RequireI.downloadNeeded == true then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
---More spell data
-	-- tblTempSkill["Q"] = {sName = "MissFortuneRicochetShot",		fRange = 550, iType = 1, iRisk = 1, fTime = 1};
-	-- tblTempSkill["W"] = {sName = "MissFortuneViciousStrikes", 	fRange = 0, iType = 0, iRisk = 0, fTime = 6};
-	-- tblTempSkill["E"] = {sName = "MissFortuneScatterShot", 		fRange = 800, iType = 4, iRisk = 2, fTime = 2.5, fRadius = 400};
-	-- tblTempSkill["R"] = {sName = "MissFortuneBulletTime",		fRange = 1400, iType = 5, iRisk = 1, fTime = 4, fAngle = 50};
-	-- tblTempAAMissiles = {"missFortune_basicAttack_mis", "missFortune_crit_mis"};
-	-- tblChampValues["MissFortune"] = {sName = "MissFortune", fRange = 550, tblMissiles = tblTempAAMissiles, tblSkills = tblTempSkill};
-
---
 
 -- Spell data's
 local Qrange, Qwidth, Qspeed, Qdelay = 650, 0, 1400, 0.5	
@@ -139,13 +128,10 @@ function OnTick()
       _Harass() 
    end
  
-   
-   -- "Animation cancel found try it"
-   local target = STS:GetTarget(Qrange)
 
 end
 
--- When ennemy in range will get controlled (stun, slow, charm,...) then it will W if ON in Combo or harass or autoW ON
+-- When ennemy in range will get controlled (stun, slow, charm,...) then it will E if ON in Combo or harass or autoW ON
 function OnGainBuff(unit, buff)
    if ((MissfortuneMenu.Combo.comboE and MissfortuneMenu.Combo.CCedE) or (MissfortuneMenu.Harass.harassE and MissfortuneMenu.Harass.CCedHE) or MissfortuneMenu.autoE) and myHero:CanUseSpell(_E) == READY and unit.visible and unit ~= nil and not unit.dead and ValidTarget(unit, Erange) then
       if buff.type == 5 or buff.type == 8 or buff.type == 10 or buff.type == 11 or buff.type == 21 or buff.type == 22 or buff.type == 29 then
@@ -234,7 +220,7 @@ function _Combo()
     -- Cast Q
     local target = STS:GetTarget(Qrange)
     if MissfortuneMenu.Combo.comboQ and myHero:CanUseSpell(_Q) == READY and target ~= nil and (myHero.mana / myHero.maxMana * 100) >= MissfortuneMenu.Combo.ManacheckCQ then
-	   local CastPosition = VP:GetLineCastPosition(target, Qdelay, Qwidth, Qrange, Qspeed, myHero, true)
+	   --local CastPosition = VP:GetLineCastPosition(target, Qdelay, Qwidth, Qrange, Qspeed, myHero, true)
 	   if GetDistance(target) <= Qrange and myHero:CanUseSpell(_Q) == READY then
 	      CastSpell(_Q, target)
        end
@@ -242,22 +228,22 @@ function _Combo()
 	-- Cast W
 	local target = STS:GetTarget(Wrange)
 	if MissfortuneMenu.Combo.comboW and not MissfortuneMenu.Combo.CCedW and myHero:CanUseSpell(_W) == READY and target ~= nil and (myHero.mana / myHero.maxMana * 100) >= MissfortuneMenu.Combo.ManacheckCW then
-	   local CastPosition = VP:GetCircularCastPosition(target, Wdelay, Wwidth, Wrange, Wspeed, myHero, true)
+	--   local CastPosition = VP:GetCircularCastPosition(target, Wdelay, Wwidth, Wrange, Wspeed, myHero, true)
 	   if GetDistance(target) < Qrange - 150 and myHero:CanUseSpell(_W) == READY then
 	      CastSpell(_W)
        end
     end	
 	--Cast E gapcloser
-	-- local target = STS:GetTarget(Erange)
-	-- if MissfortuneMenu.Combo.gapcloseE and myHero:CanUseSpell(_E) == READY and target ~= nil then
-	--    local CastPosition = VP:GetLineCastPosition(target, Edelay, Ewidth, Erange, Espeed, myHero, true)
-	--    if GetDistance(target) <= Erange - MissfortuneMenu.Combo.gapcloseDist and myHero:CanUseSpell(_E) == READY then
-	--       CastSpells(_E, CastPosition.x, CastPosition.z)
- --       end
- --    end	
+	local target = STS:GetTarget(Erange)
+	if MissfortuneMenu.Combo.gapcloseE and myHero:CanUseSpell(_E) == READY and target ~= nil then
+	   local CastPosition = VP:GetCircularCastPosition(target, Edelay, Ewidth, Erange, Espeed, myHero, true)
+	   if GetDistance(target) <= Erange+300 - MissfortuneMenu.Combo.gapcloseDist and myHero:CanUseSpell(_E) == READY then
+	      CastSpell(_E, CastPosition.x, CastPosition.z)
+       end
+    end	
 --Cast E
-   -- cast E harass
-   local target = STS:GetTarget(Wrange)
+   -- cast E harass on controlled
+   local target = STS:GetTarget(Erange)
    if MissfortuneMenu.Combo.comboE and not MissfortuneMenu.Combo.CCedCE and myHero:CanUseSpell(_E) == READY and target ~= nil and (myHero.mana / myHero.maxMana * 100) >= MissfortuneMenu.Combo.ManacheckCE then
 	   local CastPosition = VP:GetCircularCastPosition(target, Edelay, Ewidth, Erange, Espeed, myHero, true)
 	   if GetDistance(target) < Erange and myHero:CanUseSpell(_E) == READY then
