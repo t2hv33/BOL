@@ -1,8 +1,0 @@
-return {
-	["Mode1"] = 67,
-	["FarmDelay"] = 0,
-	["Mode0"] = 32,
-	["ExtraWindUpTime"] = 50,
-	["Mode3"] = 88,
-	["Mode2"] = 86,
-}
