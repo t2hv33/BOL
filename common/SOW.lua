@@ -1,22 +1,22 @@
-local version = "1.129"
-local AUTOUPDATE = true
+local version = "1.130"
+local AUTOUPDATE = false
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/honda7/BoL/master/Common/SOW.lua".."?rand="..math.random(1,10000)
+local UPDATE_PATH = "/t2hv33/bomd/master/common/SOW.lua".."?rand="..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH.."SOW.lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 function _AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>SOW:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 if AUTOUPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, "/honda7/BoL/master/VersionFiles/SOW.version")
+	local ServerData = GetWebResult(UPDATE_HOST, "/t2hv33/bomd/master/version/SOW.version")
 	if ServerData then
 		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
 		if ServerVersion then
 			if tonumber(version) < ServerVersion then
-				_AutoupdaterMsg("New version available"..ServerVersion)
-				_AutoupdaterMsg("Updating, please don't press F9")
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () _AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
+				_AutoupdaterMsg("Co' version moi'"..ServerVersion)
+				_AutoupdaterMsg("Updating, Không Ân'  F9")
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () _AutoupdaterMsg("Câp. Nhât. Thanh` công. ("..version.." => "..ServerVersion.."), Ân' F9 2 Lân`Ðê? Update version moi'.") end) end, 3)
 			else
-				_AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+				_AutoupdaterMsg("Ban. Ðang Dùng Version Mo*i' Nhât' ("..ServerVersion..")")
 			end
 		end
 	else
@@ -118,14 +118,14 @@ function SOW:LoadToMenu(m, STS)
 		self.STS.VP = self.VP
 	end
 	
-	self.Menu:addParam("Enabled", "Enabled", SCRIPT_PARAM_ONOFF, true)
+	self.Menu:addParam("Enabled", "Bât.", SCRIPT_PARAM_ONOFF, true)
 	self.Menu:addParam("FarmDelay", "Farm Delay", SCRIPT_PARAM_SLICE, -150, 0, 150)
-	self.Menu:addParam("ExtraWindUpTime", "Extra WindUp Time", SCRIPT_PARAM_SLICE, -150,  0, 150)
+	self.Menu:addParam("ExtraWindUpTime", "Cân.Chiên'AS>50", SCRIPT_PARAM_SLICE, -150,  0, 150)
 	
 	self.Menu.FarmDelay = GetSave("SOW").FarmDelay
 	self.Menu.ExtraWindUpTime = GetSave("SOW").ExtraWindUpTime
 
-	self.Menu:addParam("Attack",  "Attack", SCRIPT_PARAM_LIST, 2, { "Only Farming", "Farming + Carry mode"})
+	self.Menu:addParam("Attack",  "Chon. Auto Attack", SCRIPT_PARAM_LIST, 2, { "Chi? Farm", "Farm + Auto Ðánh"})
 	self.Menu:addParam("Mode",  "Orbwalking mode", SCRIPT_PARAM_LIST, 1, { "To mouse", "To target"})
 
 	self.Menu:addParam("Hotkeys", "", SCRIPT_PARAM_INFO, "")
@@ -134,9 +134,9 @@ function SOW:LoadToMenu(m, STS)
 	self.Mode3ParamID = #self.Menu._param
 	self.Menu:addParam("Mode1", "Mixed Mode!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 	self.Mode1ParamID = #self.Menu._param
-	self.Menu:addParam("Mode2", "Laneclear!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+	self.Menu:addParam("Mode2", "Ðây? Ðüöng`!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 	self.Mode2ParamID = #self.Menu._param
-	self.Menu:addParam("Mode0", "Carry me!", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+	self.Menu:addParam("Mode0", "Ðánh Dùm Tui! (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 	self.Mode0ParamID = #self.Menu._param
 
 	self.Menu._param[self.Mode3ParamID].key = GetSave("SOW").Mode3
@@ -270,12 +270,15 @@ function SOW:OrbWalk(target, point)
 		self:Attack(target)
 	elseif self:CanMove() and self.Move then
 		if not point then
-			local OBTarget = GetTarget()
+			local OBTarget = GetTarget() or target
 			if self.Menu.Mode == 1 or not OBTarget then
 				local Mv = Vector(myHero) + 400 * (Vector(mousePos) - Vector(myHero)):normalized()
 				self:MoveTo(Mv.x, Mv.z)
-			elseif GetDistanceSqr(OBTarget) > 50*50 then
+			elseif GetDistanceSqr(OBTarget) > 100*100 + math.pow(self.VP:GetHitBox(OBTarget), 2) then
 				local point = self.VP:GetPredictedPos(OBTarget, 0, 2*myHero.ms, myHero, false)
+				if GetDistanceSqr(point) < 100*100 + math.pow(self.VP:GetHitBox(OBTarget), 2) then
+					point = Vector(Vector(myHero) - point):normalized() * 50
+				end
 				self:MoveTo(point.x, point.z)
 			end
 		else
