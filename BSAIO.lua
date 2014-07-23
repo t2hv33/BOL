@@ -1,5 +1,29 @@
-local version = 1.0
---[[Version 1.0
+local version = 1.1
+local AUTOUPDATE = true
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/t2hv33/bomd/master/BSAIO.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = LIB_PATH.."BSAIO.lua"
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+function _AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>BSAIO:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if AUTOUPDATE then
+	local ServerData = GetWebResult(UPDATE_HOST, "/t2hv33/bomd/master/version/BSAIO.version")
+	if ServerData then
+		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
+		if ServerVersion then
+			if tonumber(version) < ServerVersion then
+				_AutoupdaterMsg("Co' version moi'"..ServerVersion)
+				_AutoupdaterMsg("Updating, Không Ân'  F9")
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () _AutoupdaterMsg("Câp. Nhât. Thanh` công. ("..version.." => "..ServerVersion.."), Ân' F9 2 Lân`Ðê? Update version moi'.") end) end, 3)
+			else
+				_AutoupdaterMsg("Ban. Ðang Dùng Version Mo*i' Nhât' ("..ServerVersion..")")
+			end
+		end
+	else
+		_AutoupdaterMsg("Error downloading version info")
+	end
+end
+
+--[[Version 1.1
     Contents:
         Bolscript.com   -- A basic but powerful library downloader
         Orbwakler       -- Implement from SOWi
@@ -15,6 +39,11 @@ local version = 1.0
 --BUG: 
 		Fix Bug all of script
 
+		
+--CHANGELOG:
+		ADD BOLTRACKER HWID
+
+ 
   _______ ___  _    ___      ______ ____  
  |__   __|__ \| |  | \ \    / /___ \___ \ 
     | |     ) | |__| |\ \  / /  __) |__) |
