@@ -11,11 +11,11 @@ if AUTOUPDATE then
 		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
 		if ServerVersion then
 			if tonumber(version) < ServerVersion then
-				_AutoupdaterMsg("Co' version moi'"..ServerVersion)
-				_AutoupdaterMsg("Updating, Không Ân'  F9")
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () _AutoupdaterMsg("Câp. Nhât. Thanh` công. ("..version.." => "..ServerVersion.."), Ân' F9 2 Lân`Ðê? Update version moi'.") end) end, 3)
+				_AutoupdaterMsg("Have a new version"..ServerVersion)
+				_AutoupdaterMsg("Updating, Don't Press F9")
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () _AutoupdaterMsg("Câp. Nhât. Thanh` công. ("..version.." => "..ServerVersion.."), Reload F9 to load newest version.") end) end, 3)
 			else
-				_AutoupdaterMsg("Ban. Ðang Dùng Version Mo*i' Nhât' ("..ServerVersion..")")
+				_AutoupdaterMsg("Ban dang dung version moi nhat ("..ServerVersion..")")
 			end
 		end
 	else
