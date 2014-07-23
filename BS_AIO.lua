@@ -1,12 +1,15 @@
-local version = 0.2
+local version = 0.4
 --Version 0.1
 --Init All In One for BolScript.com by BomD
 --Orbwaler standalone and skillshoot
 --Version 0.2
 --Add TurnAround.
 --Advanced Turn Around - Dodge it, by turning around!
-
-
+--Version 0.3 
+--Canh?Báo
+--Version 0.4
+--Fix some error make script won't load with some champion 
+--Tweak config Alert
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -21,7 +24,7 @@ else
     DOWNLOADING_SOURCELIB = true
     DownloadFile(SOURCELIB_URL, SOURCELIB_PATH, function() print("Required libraries downloaded successfully, please reload") end)
 end
-require "old2dgeo"
+--require "old2dgeo"
 local RequireI = Require("SourceLib")
 RequireI:Add("vPrediction", "https://raw.github.com/Hellsing/BoL/master/common/VPrediction.lua")
 RequireI:Add("SOW", "https://raw.github.com/Hellsing/BoL/master/common/SOW.lua")
@@ -32,11 +35,24 @@ if RequireI.downloadNeeded == true then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---Init Freaking Evadee
---end evadee
-
-
-
+--Init Alert
+local LastPinged = 0
+local CL = ChampionLane()
+local blackColor  = 4278190080
+local purpleColor = 4294902015
+local greenColor  = 4278255360
+local yellowColor = 4294967040
+local vangaColor = 4294967295
+local aquaColor = ARGB(255,102, 205, 170)
+local dangerousobjects = {      
+        { name = "Jack In The Box", objectType = "boxes", spellName = "JackInTheBox", charName = "ShacoBox", color = 0x00FF0000, range = 300, duration = 60000},
+        { name = "Cupcake Trap", objectType = "traps", spellName = "CaitlynYordleTrap", charName = "CaitlynTrap", color = 0x00FF0000, range = 300, duration = 240000},
+        { name = "Noxious Trap", objectType = "traps", spellName = "Bushwhack", charName = "Nidalee_Spear", color = 0x00FF0000, range = 300, duration = 240000},
+        { name = "Noxious Trap", objectType = "traps", spellName = "BantamTrap", charName = "TeemoMushroom", color = 0x00FF0000, range = 300, duration = 600000}}
+local drawobjects = {}
+local drawtraps = {}
+local pinkwards = {}
+--end Alert
 
 --skillshot init
 _G.Champs = {
@@ -271,7 +287,9 @@ _G.Champs = {
     }
 }
 --Skillshoot init 0.1
-if not Champs[myHero.charName] then return end -- put other declarations after this check
+
+--if not Champs[myHero.charName] then return end -- put other declarations after this check
+--this line give an error for BS_0.3
 local data = Champs[myHero.charName]
 local VP -- it is nil by default :D
 local Target 
@@ -283,6 +301,8 @@ local keybindings = { [_Q] = "Z", [_W] = "X", [_E] = "C", [_R] = "R" }
 local ConfigType = SCRIPT_PARAM_ONKEYDOWN
 local initDone = false
 --End Skillshoot
+
+--Start Orbwalker
 local _TOMOUSE, _TOTARGET, _EMPOWER = 100, 101, 201
 local MySpells = {}
 local Spells =
@@ -352,17 +372,50 @@ local Spells =
         [_W] = {name = "Volley", skillshot = true, spellType = SKILLSHOT_CONE, range = 1050, width = 57.5 * math.pi / 180, speed = 1600, delay = 0.25, AOE = true, collision = false},
     },
 }
+--End OrbWalker
 
 function OnLoad()
-    DelayAction(DelayedLoad, 1)
+	PrintChat ("<font color='#14C4DB'>Skillshoot and Olbwalker</font> <font color='#7fe8c2'>of</font> <font color='#DB32D0'>BolScript.com</font> <font color='#7fe8c2'>cho free user by</font> <font color='#e97fa5'>BomD</font></font>")
+     --start Alert
+    lastvanga = 0
+    local loadedTable, error = Serialization.loadTable(SCRIPT_PATH .. 'Common/IHateWards_cache.lua')
+    if not error and loadedTable.saveTime <= GetInGameTimer() then
+        placedWards = loadedTable.placedWards
+    else
+        placedWards = {}
+    end
+    WardsHater = scriptConfig("BolScript-Canh?Bao'", "CanhBao")
+    WardsHater:addParam("drawpath", "Hiên.Ðuong`Team Ðich.", SCRIPT_PARAM_ONOFF, true)
+    WardsHater:addParam("drawallypath", "Hiên.Ðuong`Team Mình", SCRIPT_PARAM_ONOFF, false)
+    WardsHater:addParam("drawpathtime", "Hiên.time", SCRIPT_PARAM_ONOFF, true)
+    WardsHater:addParam("drawobj", "Hiên.Nâ'm+Bây~", SCRIPT_PARAM_ONOFF, true)
+    WardsHater:addParam("drawwards", "Hiên.Mät' WARD", SCRIPT_PARAM_ONOFF, true)
+    WardsHater:addParam("ownteam", "Hiên.Hàng Team Mình(Ðang TEST)", SCRIPT_PARAM_ONOFF, false)
+    --WardsHater:addParam("ping11", "Ping Jungler Ðich.(Ðang TEST-VIP)", SCRIPT_PARAM_ONOFF, false)
+   -- WardsHater:addParam("ping", "Ping Jungler Ðich.(Ðang TEST-FREE)", SCRIPT_PARAM_ONOFF, false)
+    WardsHater:addParam("pingdistance", "Khoang?Cach' < Ping Jungler Ðich.", SCRIPT_PARAM_SLICE, 1500, 100, 4000, 0)
+    WardsHater:addParam("pinginterval", "Time < Ping Jungler Ðich.(s)", SCRIPT_PARAM_SLICE, 1, 69, 180, 0)
+    WardsHater:addParam("vangamode", "Chô~Này Có WARD! (I)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("I"))
+    WardsHater:addParam("showvision", "Lây'Tâm`Nhin`  (U)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("U"))
+    WardsHater:addParam("drawcross", "Hiên.Mui~Tên", SCRIPT_PARAM_ONOFF, true)
+    WardsHater:addParam("crosssize", "adj cross_size", SCRIPT_PARAM_SLICE, 30, 10, 100, 0)
+    WardsHater:addParam("crosswidth", "adj cross_width", SCRIPT_PARAM_SLICE, 8, 5, 50, 0)
+    WardsHater:addParam("txtsize", "adj Champ Text size", SCRIPT_PARAM_SLICE, 15, 5, 50, 0)
+    WardsHater:addParam("txtxpos", "adj Champ Text x pos", SCRIPT_PARAM_SLICE, 0, -300, 300, 0)
+    WardsHater:addParam("txtypos", "adj Champ Text y pos", SCRIPT_PARAM_SLICE, -60, -300, 300, 0)
+    WardsHater:addParam("timertxtsize", "adj Timer Text Size", SCRIPT_PARAM_SLICE, 20, 5, 50, 0)
+    --end Arlet
+
     --New Aiming
+	if Champs[myHero.charName] then
       VP = VPrediction()
     Config = scriptConfig("BolScript-Skillshoot: Cài Ðät.", "BolScript")
-   -- if Champs[myHero.charName] ~= nil then -- this check is on line 297
+    if Champs[myHero.charName] ~= nil then -- this line give a fucking bug in BS 0.3
     for i, spell in pairs(data) do
         Config:addParam(str[i], "Xài'-" .. str[i], ConfigType, false, GetKey(keybindings[i]))
         predictions[str[i]] = {spell.range, spell.speed, spell.delay, spell.minionCollisionWidth, i}
     end 
+	end
     Config:addParam("accuracy", "Ðoán Chính Xác", SCRIPT_PARAM_SLICE, 1, 0, 5, 0)
     Config:addParam("rangeoffset", "Giäm? Range Xài Chiêu", SCRIPT_PARAM_SLICE, 0, 0, 200, 0)
     Config:addParam("autocast", "Auto Xài khi 100% trung' (L)", SCRIPT_PARAM_ONKEYTOGGLE, false, 76)
@@ -370,10 +423,11 @@ function OnLoad()
 	ts2.name = "Skillshoot"
     Config:addTS(ts2)
     initDone = true
-    PrintChat ("<font color='#14C4DB'>Skillshoot and Olbwalker</font> <font color='#7fe8c2'>of</font> <font color='#DB32D0'>BolScript.com</font> <font color='#7fe8c2'>cho free user by</font> <font color='#e97fa5'>BomD</font></font>")
+	end
+    --PrintChat ("<font color='#14C4DB'>Skillshoot and Olbwalker</font> <font color='#7fe8c2'>of</font> <font color='#DB32D0'>BolScript.com</font> <font color='#7fe8c2'>cho free user by</font> <font color='#e97fa5'>BomD</font></font>")
 
     --Advance Turn Around
-        TurnAroundTable = {
+    TurnAroundTable = {
         lastTargetedPos = { x = nil, z = nil },
         lastMove = 0,
         champions = {
@@ -396,20 +450,25 @@ function OnLoad()
     TurnAroundMenu = scriptConfig("BolScript-Quay Lüng Lai.", "TA")
         TurnAroundMenu:addParam("Enable", "Bât.Script", SCRIPT_PARAM_ONOFF, true)
 
-        TurnAroundMenu:addSubMenu("Champions and Spells", "cas")
+        TurnAroundMenu:addSubMenu("Cài Ðat.Nâng Cao", "cas")
         for i = 1, #TurnAroundTable.champions, 1 do
             if i ~= 3 then
                 TurnAroundMenu.cas:addSubMenu("Né -"..TurnAroundTable.champions[i].charName, TurnAroundTable.champions[i].charName)
             end
             TurnAroundMenu.cas[TurnAroundTable.champions[i].charName]:addParam(TurnAroundTable.champions[i].key, TurnAroundTable.champions[i].spellName, SCRIPT_PARAM_ONOFF, true)
-        end
-
+    end
     --End Turn Around
 
-end
+    --Load Orbwalker
+    DelayAction(DelayedLoad, 1)
+    --End Orbwalker
 
+end --end onload
+
+
+--start orbwalker
 function CastSpells(target, mode)
-    for id, spell in pairs(Spells[myHero.charName]) do
+	  for id, spell in pairs(Spells[myHero.charName]) do
         if Menu["Spells"..myHero.charName]["id"..id].Enabled and Menu["Spells"..myHero.charName]["id"..id]["Mode"..mode] and Menu["Spells"..myHero.charName]["id"..id][tostring(string.gsub(target.type, "_", ""))] then
             local range = spell.range == -1 and SOWi:MyRange() or spell.range
             if type(range) == "function" then
@@ -487,12 +546,12 @@ function DelayedLoad()
 
         SOWi:LoadToMenu(Menu)
         SOWi:RegisterAfterAttackCallback(AfterAttack)
-        --Config:permaShow("Mode0")
         Menu:permaShow("Mode0")
     end
 end
+--end orbwalker
 
---Aiming
+--Aiming Skillshoot
 --Credit Trees
 function GetCustomTarget()
     if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
@@ -503,7 +562,7 @@ function GetCustomTarget()
 end
 --End Credit Trees
 
---End Aiming
+--End Aiming Skillshoot
 function IsLeeThresh()
     if myHero.charName == 'LeeSin' then
         if myHero:GetSpellData(_Q).name == 'BlindMonkQOne' then
@@ -523,7 +582,9 @@ function IsLeeThresh()
 end
 
 
+
 function OnTick()
+--start orbwalker
     if SOWi and AArangeCircle then
         AArangeCircle.radius = SOWi:MyRange() + 50
     end
@@ -540,6 +601,7 @@ function OnTick()
             end
         end
     end
+	--end orbwalker
     --Aiming
     if initDone then
         Target = GetCustomTarget() --Tmrees
@@ -589,11 +651,376 @@ function OnWndMsg(msg, key)
     if msg == WM_RBUTTONDOWN then
         TurnAroundTable.lastTargetedPos.x, TurnAroundTable.lastTargetedPos.z = mousePos.x, mousePos.z
     end
+
+    --start awa
+        if WardsHater.vangamode and lastvanga < GetTickCount() then
+        for networkID, ward in pairs(placedWards) do
+            if ward and GetDistance(ward,mousePos)<100 and ward.vanga == 3 then
+                placedWards[networkID] = nil
+                return
+            end
+        end
+        placedWards[GetTickCount()] = {x = mousePos.x, y = myHero.y, z = mousePos.z, visionRange = 1100, color = vangaColor, spawnTime = GetTickCount(), duration = 180000, vanga = 3}
+        lastvanga = GetTickCount() + 1000
+    end
+
+    --end awa
+
+
 end
 
 --Off
 
+--======================================================NEW 0.3 CANH BAO
+
+function OnBugSplat()
+    Serialization.saveTable({wards = placedWards}, SCRIPT_PATH .. 'Common/HiddenWards_BugSplat.lua')
+end
+
+function OnCreateObj(object)
+    if object ~= nil and object.type == "obj_AI_Minion" then
+        for idx, table1 in ipairs(dangerousobjects) do
+            if object.name == table1.name then
+                local current_tick = GetTickCount()
+                local temp_table = {object = object, name = table1.name, duration = table1.duration, start_tick = current_tick, end_tick = current_tick+table1.duration, range = table1.range, color = table1.color}
+                --rint(temp_table)
+                table.insert(drawobjects, temp_table)
+            end
+        end
+    end
+end
+
+function OnDeleteObj(object)
+
+    if object.name == 'Ward_Vision_Idle.troy' then
+        for idx, ward in pairs(pinkwards) do
+            if GetDistance(ward, object) < 400 then
+                pinkwards[idx].alive = 0
+            end
+        end
+    end
+
+    if object ~= nil and object.name ~= nil and object.type == "obj_AI_Minion" then
+        for idx, table1 in ipairs(drawobjects) do
+            if object.valid and table1.object.valid and table1.object.networkID == object.networkID then
+                drawobjects[idx] = nil
+                
+            end
+        end
+        for idx, table1 in ipairs(drawtraps) do
+            if object.networkID == table1.obnid then
+                drawtraps[idx] = nil
+            end
+        end
+        if object.name == 'Ward_Vision_Idle.troy' then
+            for idx, table1 in ipairs(pinkwards) do
+                if object.x == table1.x and object.y == table1.y and object.z == wable1.z then
+                    pinkwards[idx] = nil
+                end
+            end
+        end
+    end
+end
+
+function CheckTimer()
+    for idx, table in ipairs(drawobjects) do
+        if table.object.valid and table.end_tick < GetTickCount() then
+            drawobjects[idx] = nil
+        end
+    end
+end
 
 
 
+function CheckLane()
+    local enemy_jungler = CL:GetJungler()
+    --local my_lane = CL:GetMyLane()
+    --local champs_in_lane = CL:GetHeroArray(my_lane)
+    --for idx, champ in ipairs(champs_in_lane) do
+        --if champ.networkID == enemy_jungler.networkID then
+        if enemy_jungler ~= nil then
+            local bool = false
+            for i = enemy_jungler.pathIndex, enemy_jungler.pathCount do
+                path = enemy_jungler:GetPath(i)
+                if path ~= nil and path.x then
+                    if GetDistance(path,myHero) < WardsHater.pingdistance then
+                        bool = true
+                    end
+                end
+            end
+            if bool and GetTickCount() - LastPinged > WardsHater.pinginterval*1000 then
+                RecPing(enemy_jungler.x, enemy_jungler.z)
+                LastPinged = GetTickCount()
+            end
+        --end
+    end
 
+end
+
+
+--Honda7
+-- function RecPing(X, Y)
+--     Packet("R_PING", {x = X, y = Y, type = PING_FALLBACK}):receive()
+-- end
+
+-- function OnRecvPacket(p)
+--     if p.header == 50 then
+--         p.pos = 1
+--         local deaddid = p:DecodeF()
+--         local killerid = p:DecodeF()
+--         for networkID, ward in pairs(placedWards) do
+--             if ward and deaddid and networkID == deaddid and ward.vanga == 1 and (GetTickCount() - ward.spawnTime) > 200 then
+--                 placedWards[networkID] = nil
+--             elseif ward and deaddid and networkID == deaddid and ward.vanga == 2 and killerid == 0 then
+--                 placedWards[networkID] = nil
+--             end
+--         end
+--     end
+    
+--     if p.header == 0xB5 then
+        
+--         p.pos = 12
+
+--         local wardtype2 = p:Decode1()
+--         p.pos = 1
+--         local creatorID = p:DecodeF()
+--         p.pos = p.pos + 20
+--         local creatorID2 = p:DecodeF()
+--         p.pos = 37
+--         local objectID = p:DecodeF()
+--         local objectX = p:DecodeF()
+--         local objectY = p:DecodeF()
+--         local objectZ = p:DecodeF()
+--         local objectX2 = p:DecodeF()
+--         local objectY2 = p:DecodeF()
+--         local objectZ2 = p:DecodeF()
+--         p:DecodeF()
+--         local warddet = p:Decode1()
+--         p.pos = p.pos + 4
+--         local warddet2 = p:Decode1()
+--         p.pos = 13
+--         local wardtype = p:Decode1()
+--         --[[ 
+--             8 - Vision ward
+--             229 - Sight Stone 
+--             161 - normal wards
+--             56 trinket1
+--             56 - trinket1 green upgrade
+--             137 = trink1 pink
+--             48 - teemo shroom
+--             ]]
+--         local visionColor
+
+--         --if wardtype==8 or wardtype2==0x7E then return end -- Dont show pinks
+
+--         local objectID = DwordToFloat(AddNum(FloatToDword(objectID), 2))
+--         local creatorchamp = objManager:GetObjectByNetworkId(creatorID)
+--         local duration
+--         local range
+
+--         if creatorchamp and creatorchamp.team == myHero.team and not WardsHater.ownteam then return end
+        
+--         visionColor = (wardtype == 229 and yellowColor or greenColor)
+        
+--         if (warddet == 0x3E or (warddet == 0x3F and wardtype == 0x3F)) then ---objects
+--             if wardtype == 0x30 and wardtype2 == 0xD0 and creatorchamp.charName == "Teemo" then
+--                 duration = 600000 range = 200 -- shroom
+--             elseif (wardtype == 0x09 and wardtype2 == 0x5B  and creatorchamp.charName == "Nidalee" ) or (wardtype == 62 and wardtype2 == 0xB0  and creatorchamp.charName == "Caitlyn" ) then
+--                 duration = 240000 range = 100 -- Nidalee trap / cait
+--             elseif (wardtype == 0x02 and wardtype2 == 0x68  and creatorchamp.charName == "Shaco" ) then
+
+--                 duration = 60000 range = 100 -- Shaco
+--             else return
+--             end
+            
+--             --placedWards[objectID] = {x = objectX2, y = objectY2, z = objectZ2, visionRange = range, color = yellowColor, spawnTime = GetTickCount(), duration = duration, vanga = 2}
+--             tmpdrawtraps = {x = objectX2, y = objectY2, z = objectZ2, visionRange = range, color = yellowColor, spawnTime = GetTickCount(), duration = duration, vanga = 2, obnid = objectID }
+--             table.insert(drawtraps, tmpdrawtraps)
+
+--         end
+        
+--         if warddet == 0x3F and warddet2 == 0x33 and wardtype ~= 12 and wardtype ~= 48 then --wards 116 | wardtype 48 -> riven E
+--             if wardtype2 == 0x6E then
+--                 placedWards[objectID] = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = aquaColor, spawnTime = GetTickCount(), duration = 60000, vanga = 1 } -- WARDING TOTEM
+--             elseif wardtype2 == 0x2E then
+--                 placedWards[objectID] = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = aquaColor, spawnTime = GetTickCount(), duration = 120000, vanga = 1 }    -- GREATER TOTEM
+--             elseif wardtype == 8 then
+--                 tmppnk = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = purpleColor, vanga = 2, alive = 1, owner = creatorchamp.name } --Pink ward
+--                 table.insert(pinkwards, tmppnk)
+--             elseif wardtype == 137 then
+--                 tmppnk = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = purpleColor, vanga = 2, alive = 1, owner = creatorchamp.name }
+--                 table.insert(pinkwards, tmppnk)
+--             elseif wardtype2 == 0xAE then
+--                 placedWards[objectID] = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = aquaColor, spawnTime = GetTickCount(), duration = 180000, vanga = 1 }    -- GREATER STEALTH TOTEM
+--             elseif wardtype2 == 0xEE then
+--                 placedWards[objectID] = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = greenColor, spawnTime = GetTickCount(), duration = 180000, vanga = 1 }   -- WRIGGLES LANTERN
+--             else
+--                 placedWards[objectID] = {x = objectX2, y = objectY2, z = objectZ2, visionRange = 1100, color = visionColor, spawnTime = GetTickCount(), duration = ((wardtype2 == 0xB4 or wardtype2 == 0x6E) and 60000) or 180000, vanga = 1 }
+--             end
+--         end
+--     end
+--     p.pos = 1
+-- end
+
+function OnUnload()
+    Serialization.saveTable({placedWards = placedWards, saveTime = GetInGameTimer()}, SCRIPT_PATH .. 'Common/IHateWards_cache.lua')
+end
+
+function round(num, idp)
+    return string.format("%." .. (idp or 0) .. "f", num)
+end
+
+
+function OnDraw()
+    CheckTimer()
+    --print(#drawobjects)
+    if WardsHater.ping then
+        CheckLane()
+    end
+--          tmpdrawtraps = {x = objectX2, y = objectY2, z = objectZ2, visionRange = range, color = yellowColor, spawnTime = GetTickCount(), duration = duration, vanga = 2, obnid = objectID }
+    if WardsHater.drawobj then
+
+        for idx, table1 in ipairs(drawobjects) do
+            if table1.object ~= nil and table1.object.valid then
+                DrawCircle3D(table1.object.x, table1.object.y, table1.object.z, 120, 1,  ARGB(255, 0, 255, 255))
+                time_left = (table1.end_tick - GetTickCount())/1000
+                timer_text = " " .. TimerText(time_left)
+                DrawText3D(timer_text, table1.object.x, myHero.y, table1.object.z, 15, ARGB(255,0,255,255), true)
+            end
+        end
+
+
+
+        for idx, ward in ipairs(drawtraps) do
+            if ward.obnid ~= nil then
+                if (GetTickCount() - ward.spawnTime) > ward.duration then
+                    drawtraps[idx] = nil
+                else
+                    local minimapPosition = GetMinimap(ward)
+                    DrawTextWithBorder('.', 60, minimapPosition.x - 3, minimapPosition.y - 43, ward.color, blackColor)
+
+                    local x, y, onScreen = get2DFrom3D(ward.x, ward.y, ward.z)
+                    DrawTextWithBorder(TimerText((ward.duration - (GetTickCount() - ward.spawnTime)) / 1000), 20, x - 15, y - 11, ward.color, blackColor)
+
+                    DrawCircle(ward.x, ward.y, ward.z, 90, ward.color)
+                    if WardsHater.showvision then
+                        DrawCircle(ward.x, ward.y, ward.z, ward.visionRange, ward.color)
+                    end
+                end
+            end
+        end
+    end
+
+    if WardsHater.drawwards then
+        for idx, ward in pairs(pinkwards) do --Pink Wards
+            if ward.alive == 1 then
+                local minimapPosition = GetMinimap(ward)
+                DrawTextWithBorder('.', 60, minimapPosition.x - 3, minimapPosition.y - 43, ward.color, blackColor)
+
+                local x, y, onScreen = get2DFrom3D(ward.x, ward.y, ward.z)
+                DrawTextWithBorder('Pink ward', 20, x - 15, y - 11, ward.color, blackColor)
+
+                DrawCircle(ward.x, ward.y, ward.z, 90, ward.color)
+                if WardsHater.showvision then
+                    DrawCircle(ward.x, ward.y, ward.z, ward.visionRange, ward.color)
+                end
+            end
+        end
+        for networkID, ward in pairs(placedWards) do --PacketWards
+            if (GetTickCount() - ward.spawnTime) > ward.duration then
+                placedWards[networkID] = nil
+            else
+                local minimapPosition = GetMinimap(ward)
+                DrawTextWithBorder('.', 60, minimapPosition.x - 3, minimapPosition.y - 43, ward.color, blackColor)
+
+                local x, y, onScreen = get2DFrom3D(ward.x, ward.y, ward.z)
+                DrawTextWithBorder(TimerText((ward.duration - (GetTickCount() - ward.spawnTime)) / 1000), 20, x - 15, y - 11, ward.color, blackColor)
+
+                DrawCircle(ward.x, ward.y, ward.z, 90, ward.color)
+                if WardsHater.showvision then
+                    DrawCircle(ward.x, ward.y, ward.z, ward.visionRange, ward.color)
+                end
+            end
+        end
+    end
+
+    if WardsHater.drawpath then
+        for idx, champion in ipairs(GetEnemyHeroes()) do
+            if champion.visible and not champion.dead then
+                local current_waypoints = {}
+                table.insert(current_waypoints, Vector(champion.visionPos.x, champion.visionPos.z))
+                for i = champion.pathIndex, champion.pathCount do
+                    path = champion:GetPath(i)
+                    if path ~= nil and path.x then
+                        table.insert(current_waypoints, Vector(path.x, path.z))
+                    end
+                end
+
+                local travel_time = 0
+                if #current_waypoints > 1 then
+                    for current_index = 1, #current_waypoints-1 do
+                        DrawLine3D(current_waypoints[current_index].x, myHero.y, current_waypoints[current_index].y, current_waypoints[current_index+1].x, myHero.y, current_waypoints[current_index+1].y, 2, ARGB(255, 255, 0, 0) )
+                            if current_index == #current_waypoints-1 then
+                                local endpoint = current_waypoints[current_index+1]
+                                if WardsHater.drawcross then
+                                    DrawText3D(champion.charName, current_waypoints[current_index+1].x+WardsHater.txtxpos, myHero.y, current_waypoints[current_index+1].y+WardsHater.txtypos, WardsHater.txtsize, ARGB(255, 255, 255, 0), true)
+                                    DrawLine3D(endpoint.x-WardsHater.crosssize, myHero.y, endpoint.y+WardsHater.crosssize, endpoint.x+WardsHater.crosssize, myHero.y, endpoint.y-WardsHater.crosssize, WardsHater.crosswidth, ARGB(255, 255, 0, 0) )
+                                    DrawLine3D(endpoint.x+WardsHater.crosssize, myHero.y, endpoint.y+WardsHater.crosssize, endpoint.x-WardsHater.crosssize, myHero.y, endpoint.y-WardsHater.crosssize, WardsHater.crosswidth, ARGB(255, 255, 0, 0) )
+                                end
+                            end
+                        if WardsHater.drawpathtime then
+                            local current_time = GetDistance(current_waypoints[current_index], current_waypoints[current_index+1])/champion.ms
+                            travel_time = travel_time + current_time
+                            DrawText3D(round(travel_time,1) .. " s", current_waypoints[current_index+1].x, myHero.y, current_waypoints[current_index+1].y+100, WardsHater.timertxtsize, ARGB(255,0,255,0), true)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if WardsHater.drawallypath then
+        for idx, champion in ipairs(GetAllyHeroes()) do
+            if champion.visible and not champion.dead then
+                local current_waypoints = {}
+                table.insert(current_waypoints, Vector(champion.visionPos.x, champion.visionPos.z))
+                for i = champion.pathIndex, champion.pathCount do
+                    path = champion:GetPath(i)
+                    if path ~= nil and path.x then
+                        table.insert(current_waypoints, Vector(path.x, path.z))
+                    end
+                end
+
+                local travel_time = 0
+                if #current_waypoints > 1 then
+                    for current_index = 1, #current_waypoints-1 do
+                        DrawLine3D(current_waypoints[current_index].x, myHero.y, current_waypoints[current_index].y, current_waypoints[current_index+1].x, myHero.y, current_waypoints[current_index+1].y, 2, ARGB(255, 0, 255, 0) )
+                        if current_index == #current_waypoints-1 then
+                                local endpoint = current_waypoints[current_index+1]
+                                if WardsHater.drawcross then
+                                    DrawText3D(champion.charName, current_waypoints[current_index+1].x+WardsHater.txtxpos, myHero.y, current_waypoints[current_index+1].y+WardsHater.txtypos, WardsHater.txtsize, ARGB(255, 255, 255, 0), true)
+                                    DrawLine3D(endpoint.x-WardsHater.crosssize, myHero.y, endpoint.y+WardsHater.crosssize, endpoint.x+WardsHater.crosssize, myHero.y, endpoint.y-WardsHater.crosssize, WardsHater.crosswidth, ARGB(255,0,255,0) )
+                                    DrawLine3D(endpoint.x+WardsHater.crosssize, myHero.y, endpoint.y+WardsHater.crosssize, endpoint.x-WardsHater.crosssize, myHero.y, endpoint.y-WardsHater.crosssize, WardsHater.crosswidth, ARGB(255,0,255,0) )
+                                end
+                        end
+                        if WardsHater.drawpathtime then
+                            local current_time = GetDistance(current_waypoints[current_index], current_waypoints[current_index+1])/champion.ms
+                            travel_time = travel_time + current_time
+                            DrawText3D(round(travel_time,1) .. " s", current_waypoints[current_index+1].x, myHero.y, current_waypoints[current_index+1].y+100, WardsHater.timertxtsize, ARGB(255,0,255,0), true)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+end
+
+function DrawTextWithBorder(textToDraw, textSize, x, y, textColor, backgroundColor)
+    DrawText(textToDraw, textSize, x + 1, y, backgroundColor)
+    DrawText(textToDraw, textSize, x - 1, y, backgroundColor)
+    DrawText(textToDraw, textSize, x, y - 1, backgroundColor)
+    DrawText(textToDraw, textSize, x, y + 1, backgroundColor)
+    DrawText(textToDraw, textSize, x , y, textColor)
+end
+--==END CANH BAO
