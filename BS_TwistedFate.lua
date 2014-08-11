@@ -48,7 +48,7 @@ if RequireI.downloadNeeded == true then return end
 			end
 		end	
 	end
-	if not DATA then PrintChat("<font color='#DB0FD6'>"..GetUser().."</font><font color='#FF0000'> : Access Denied.</font>") return end
+	if not DATA then PrintChat("<font color='#DB0FD6'>"..GetUser().."</font><font color='#FF0000'> : chưa đăng kí username BOL.</font>") return end
 
 
 --Spell damages
