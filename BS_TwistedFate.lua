@@ -21,7 +21,7 @@ end
 if DOWNLOADING_SOURCELIB then print("Downloading required libraries, please wait...") return end
 
 if AUTOUPDATE then
-	 SourceUpdater(SCRIPT_NAME, version, "raw.github.com", "/t2hv33/bomd/master/"..SCRIPT_NAME..".lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME, "/t2hv33/bomd/master/version/"..SCRIPT_NAME..".version"):CheckUpdate()
+	 SourceUpdater(SCRIPT_NAME, version, "raw.github.com", "/t2hv33/BOL/master/"..SCRIPT_NAME..".lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME, "/t2hv33/BOL/master/version/"..SCRIPT_NAME..".version"):CheckUpdate()
 end
 
 local RequireI = Require("SourceLib")
@@ -36,7 +36,7 @@ if RequireI.downloadNeeded == true then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	local DATA = false
 	local UPDATE_HOST = "raw.github.com"
-	local UPDATE_PATH = "/t2hv33/bomd/master/user/user_bs_AIO"
+	local UPDATE_PATH = "/t2hv33/BOL/master/user/user_bs_AIO"
 	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
 	if ServerData then
 		ServerData = tostring(ServerData)
